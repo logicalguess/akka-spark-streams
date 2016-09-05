@@ -8,7 +8,7 @@
         )
       }
     }
-    
+##
         val rddQueue = new Queue[RDD[Event]]()
 
         // Create the QueueInputDStream and use it do some processing
