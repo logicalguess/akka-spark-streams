@@ -81,3 +81,33 @@
 
         g.run()
       }
+
+##
+
+        def countsByCategoryMap = {
+          println("\nMap\n----------------")
+
+          val processor: Transformer[Event, Map[String, Int]] = Flow[Event]
+            .groupedWithin(Int.MaxValue, 1.second)
+            .map(w => w.groupBy(_.category).map { case (category, events) => category.toString -> events.length })
+
+          val g = RunnableGraph.fromGraph(GraphDSL.create() {
+            implicit builder =>
+              import GraphDSL.Implicits._
+
+              // Source
+              val A: Outlet[Event] = builder.add(events).out
+
+              // Flows
+              val B: FlowShape[Event, Map[String, Int]] = builder.add(processor)
+
+              // Sinks
+              val C: Inlet[Any] = builder.add(Sink.foreach(println)).in
+
+              A ~> B ~> C
+
+              ClosedShape
+          })
+
+          g.run()
+        }
