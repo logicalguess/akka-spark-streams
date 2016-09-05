@@ -13,5 +13,4 @@ object Functions {
       case (category, count) => println("count per window - " + category + ":" + count)}
     )
   }
-
 }
