@@ -55,17 +55,15 @@
             val D: FlowShape[Event, (String, Int)] = builder.add(processor(Category.warning.toString))
             val E: FlowShape[Event, (String, Int)] = builder.add(processor(Category.error.toString))
 
-            val F = builder.add(Merge[(String, Int)](3))
+            val F: UniformFanInShape[(String, Int), (String, Int)] = builder.add(Merge[(String, Int)](3))
 
             // Sinks
             //val G: Inlet[Any] = builder.add(Sink.foreach(println)).in
             val G: SinkShape[Any] = builder.add(Sink.actorSubscriber(Props(classOf[SinkActor], "sinkActor")))
 
-
             A ~> B ~> C ~> F ~> G
                  B ~> D ~> F
                  B ~> E ~> F
-
 
             ClosedShape
         })

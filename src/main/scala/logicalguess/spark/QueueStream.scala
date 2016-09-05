@@ -24,8 +24,7 @@ object QueueStream {
     rootLogger.setLevel(Level.ERROR)
 
     ssc.checkpoint("checkpoint")
-
-
+    
     // Create the queue through which RDDs can be pushed to
     // a QueueInputDStream
     val rddQueue = new Queue[RDD[Event]]()

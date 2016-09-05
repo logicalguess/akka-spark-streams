@@ -4,7 +4,6 @@ import logicalguess.domain.Event
 import org.apache.spark.streaming.Seconds
 import org.apache.spark.streaming.dstream.DStream
 
-
 object Functions {
   val eventProcessor: DStream[Event] => Unit = { stream =>
     val categoryCount = stream.map(event => (event.category, 1))

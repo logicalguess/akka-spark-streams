@@ -14,7 +14,6 @@ object GraphStream {
   implicit val ec = sys.dispatcher
   implicit val materializer = ActorMaterializer()
 
-  //type Producer[Out] = Outlet[Out]
   type Transformer[In, Out] = Graph[FlowShape[In, Out], NotUsed/*Any*/]
 
   case object Tick
@@ -48,7 +47,6 @@ object GraphStream {
     g.run()
   }
 
-
   def countsByCategoryFilter = {
     println("\nFilter\n----------------")
 
@@ -57,7 +55,6 @@ object GraphStream {
       .filter(_.category.toString == category)
       .groupedWithin(Int.MaxValue, 1.second)
       .map[(String, Int)](es => (category, es.length))
-
 
     val g = RunnableGraph.fromGraph(GraphDSL.create() {
       implicit builder =>
@@ -73,17 +70,15 @@ object GraphStream {
         val D: FlowShape[Event, (String, Int)] = builder.add(processor(Category.warning.toString))
         val E: FlowShape[Event, (String, Int)] = builder.add(processor(Category.error.toString))
 
-        val F = builder.add(Merge[(String, Int)](3))
+        val F: UniformFanInShape[(String, Int), (String, Int)] = builder.add(Merge[(String, Int)](3))
 
         // Sinks
         //val G: Inlet[Any] = builder.add(Sink.foreach(println)).in
         val G: SinkShape[Any] = builder.add(Sink.actorSubscriber(Props(classOf[SinkActor], "sinkActor")))
 
-
         A ~> B ~> C ~> F ~> G
              B ~> D ~> F
              B ~> E ~> F
-
 
         ClosedShape
     })
