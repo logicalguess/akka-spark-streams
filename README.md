@@ -1,4 +1,14 @@
+#Domain
+
+    object Category extends Enumeration {
+      val info, warning, error = Value
+    }
+
+    /**Event model */
+    case class Event(guid: String, category: Category.Value, action: String, timestamp: String)
+
 #Spark Streaming
+
     object Functions {
       val eventProcessor: DStream[Event] => Unit = { stream =>
         val categoryCount = stream.map(event => (event.category, 1))
@@ -8,6 +18,7 @@
         )
       }
     }
+
 ##
         val rddQueue = new Queue[RDD[Event]]()
 
