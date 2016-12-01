@@ -10,6 +10,7 @@ import org.apache.spark.streaming.{Seconds, StreamingContext}
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
 import Functions._
+import akka.actor.ActorSystem
 import org.apache.log4j.{Level, Logger}
 
 object QueueStream {
@@ -35,7 +36,7 @@ object QueueStream {
     ssc.start()
 
     //publish events
-    val actorSystem = SparkEnv.get.actorSystem
+    val actorSystem = ActorSystem()
     val cancellable =
       actorSystem.scheduler.schedule(0 milliseconds, 1 second) {
         rddQueue += ssc.sparkContext.makeRDD((1 to 100).map(_ => RandomEvent()), 10)

@@ -6,7 +6,7 @@ scalaVersion := "2.11.8"
 
 val akkaVersion  = "2.4.9"
 val kamonVersion = "0.5.2"
-val sparkVersion = "1.6.0"
+val sparkVersion = "2.0.0"
 
 /* dependencies */
 libraryDependencies ++= Seq (
