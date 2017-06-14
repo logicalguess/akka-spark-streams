@@ -6,6 +6,7 @@ import logicalguess.spark.Functions._
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.SparkConf
 import org.apache.spark.api.java.StorageLevels
+import org.apache.spark.streaming.dstream.DStream
 import org.apache.spark.streaming.receiver.Receiver
 import org.apache.spark.streaming.{Seconds, StreamingContext}
 
@@ -17,15 +18,15 @@ object ReceiverStream {
   def main(args: Array[String]): Unit = {
     val actorSystem = ActorSystem()
 
-    val createFlow: (ActorSystem, StreamingContext) => Unit = { (actorSystem, ssc) =>
-      eventProcessor(ssc.receiverStream(Source))
+    val createFlow: (DStream[Event] => Unit, ActorSystem, StreamingContext) => Unit = { (f, actorSystem, ssc) =>
+      f(ssc.receiverStream(Source))
 
-      actorSystem.scheduler.scheduleOnce(20 seconds) {
-        //ssc.stop()
-      }
+//      actorSystem.scheduler.scheduleOnce(20 seconds) {
+//        ssc.stop()
+//      }
     }
 
-    Spark.init(createFlow.curried(actorSystem))
+    Spark.init(ssc => createFlow(eventProcessor, actorSystem, ssc))
 
     val cancellable =
       actorSystem.scheduler.schedule(0 milliseconds, 100 milliseconds) {

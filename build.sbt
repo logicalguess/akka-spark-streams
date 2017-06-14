@@ -27,6 +27,9 @@ libraryDependencies ++= Seq (
   ,"com.typesafe.akka" %% "akka-stream" % akkaVersion
 
   ,"org.apache.spark"  %% "spark-streaming" % sparkVersion
+  ,"org.apache.spark"  %% "spark-sql" % sparkVersion
+
+  ,"com.twitter" %% "algebird-core" % "0.13.0"
 
 
 // -- Config --
