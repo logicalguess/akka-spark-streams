@@ -7,8 +7,9 @@ import com.twitter.algebird._
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.SparkConf
 import org.apache.spark.api.java.StorageLevels
+import org.apache.spark.sql.SparkSession
 import org.apache.spark.streaming.receiver.Receiver
-import org.apache.spark.streaming.{Seconds, StreamingContext}
+import org.apache.spark.streaming.{Minutes, Seconds, StreamingContext}
 
 /**
  * Example of using HyperLogLog monoid from Twitter's Algebird together with Spark Streaming
@@ -16,12 +17,20 @@ import org.apache.spark.streaming.{Seconds, StreamingContext}
 object StreamingHLL {
   def main(args: Array[String]) {
 
-
     val conf = new SparkConf(false)
       .setMaster("local[*]")
       .setAppName("StreamingHLL")
 
-    val ssc = new StreamingContext(conf, Seconds(1))
+    val session = SparkSession.builder().config(conf).getOrCreate()
+
+    def createStreamingContext(): StreamingContext = {
+      @transient val newSsc = new StreamingContext(session.sparkContext, Seconds(2))
+      newSsc.remember(Minutes(10))
+      newSsc.checkpoint(s"""checkpoint""")
+      newSsc
+    }
+    val ssc = StreamingContext.getActiveOrCreate(createStreamingContext)
+
     val stream = ssc.receiverStream(Source)
 
     val users = stream.map(id => id)
