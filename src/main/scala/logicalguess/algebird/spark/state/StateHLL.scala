@@ -8,7 +8,7 @@ import org.apache.log4j.{Level, Logger}
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.types._
-import org.apache.spark.streaming.{Minutes, Seconds, StreamingContext}
+import org.apache.spark.streaming._
 
 object StateHLL {
   def main(args: Array[String]) {
@@ -41,6 +41,8 @@ object StateHLL {
 
     // Merge the current HLL for a given itemId with the new HLLs for the itemId
     def updateStateFunction(newHlls: Seq[HLL], currentHll: Option[HLL]) = {
+      //println(currentHll.getOrElse(hllMonoid.zero).estimatedSize.toLong)
+      //println(hllMonoid.sum(newHlls).estimatedSize.toLong)
       val sumHll = hllMonoid.sum(currentHll.getOrElse(hllMonoid.zero) +: newHlls)
       Some(sumHll)
     }
@@ -58,6 +60,19 @@ object StateHLL {
     // Spark Streamings internals will organize all HLLs (values) for a given itemId (key)
     //   and pass to the updateStateFunction() method
     val sumItemIdHllStream = itemIdHllStream.updateStateByKey[HLL](updateStateFunction _)
+
+
+    //map with state instead of updateStateByKey
+//    def updateStateFunc(batchTime: Time, itemId: Int, newUserIdHlls: Option[HLL], state: State[HLL]): Option[(Int, HLL)] = {
+//      val sumHll = state.getOption.getOrElse(hllMonoid.zero) + newUserIdHlls.getOrElse(hllMonoid.zero)
+//      state.update(sumHll)
+//      Some(itemId, sumHll)
+//    }
+//
+//    val stateSpec: StateSpec[Int, HLL, HLL, (Int, HLL)] = StateSpec.function(updateStateFunc _)
+//      //.initialState(ssc.sparkContext.parallelize(Seq[(Int, HLL)]((90001, hllMonoid.zero))))
+//    val sumItemIdHllStream = itemIdHllStream.mapWithState[HLL, (Int, HLL)](stateSpec)
+
 
     // Format for printing by pulling out the estimatedSize from the HLL
     val sumItemIdApproxDistinctCountStream = sumItemIdHllStream.map(itemIdHll => (itemIdHll._1, itemIdHll._2.estimatedSize.toLong))
@@ -94,10 +109,13 @@ object StateHLL {
 
     val cancellable =
       actorSystem.scheduler.schedule(0 milliseconds, 100 milliseconds) {
-        Source.store("123, 90001")
+        Source.store("1, 90001")
+        Source.store("2, 90002")
+        Source.store("3, 90001")
+
       }
 
-    actorSystem.scheduler.scheduleOnce(20 seconds) {
+    actorSystem.scheduler.scheduleOnce(10 seconds) {
       cancellable.cancel()
       ssc.stop()
       System.exit(0)
