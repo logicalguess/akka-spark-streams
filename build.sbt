@@ -35,4 +35,6 @@ libraryDependencies ++= Seq (
 // -- Config --
   ,"com.typesafe" % "config" % "1.2.1"
 
+  ,"org.scalacheck" %% "scalacheck" % "1.12.2" % "test"
+
 )
