@@ -59,7 +59,8 @@ class SGDLaws extends PropSpec {
   property("Zero-step leaves Weights unchanged") {
     forAll {
       (w: SGDWeights, pos: SGDPos[(Double, IndexedSeq[Double])]) =>
-        val next = zeroStepMonoid.newWeights(w, pos.pos.head)
+        //val next = zeroStepMonoid.newWeights(w, pos.pos.head)
+        val next = oneStepMonoid.plus(w, pos).asInstanceOf[SGDWeights]
         (next.weights == w.weights && next.count == (w.count + 1L))
     }
   }
