@@ -10,6 +10,8 @@ class SGDLaws extends PropSpec {
   implicit val sgdMonoid = new SGDMonoid(SGD.constantStep(0.001), SGD.linearGradient)
   val zeroStepMonoid = new SGDMonoid(SGD.constantStep(0.0), SGD.linearGradient)
 
+  implicit def SGDToSGDWeights(sgd: SGD[_]) = sgd.asInstanceOf[SGDWeights]
+
   val (m, b) = (2.0, 4.0)
   val eps = 1e-3
 
@@ -60,7 +62,7 @@ class SGDLaws extends PropSpec {
     forAll {
       (w: SGDWeights, pos: SGDPos[(Double, IndexedSeq[Double])]) =>
         //val next = zeroStepMonoid.newWeights(w, pos.pos.head)
-        val next = oneStepMonoid.plus(w, pos).asInstanceOf[SGDWeights]
+        val next = oneStepMonoid.plus(w, pos)
         (next.weights == w.weights && next.count == (w.count + 1L))
     }
   }
@@ -76,7 +78,7 @@ class SGDLaws extends PropSpec {
       (w: SGDWeights, pos: SGDPos[(Double, IndexedSeq[Double])]) =>
         //val next = oneStepMonoid.newWeights(w, pos.pos.head)
         val next = oneStepMonoid.plus(w, pos)
-        next.asInstanceOf[SGDWeights].weights == minus(w.weights, SGD.linearGradient(w.weights, pos.pos.head))
+        next.weights == minus(w.weights, SGD.linearGradient(w.weights, pos.pos.head))
     }
   }
 }
