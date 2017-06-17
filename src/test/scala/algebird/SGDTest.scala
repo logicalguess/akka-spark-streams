@@ -1,5 +1,6 @@
 package algebird
 
+import com.twitter.algebird.SGD.dot
 import org.scalacheck.Prop._
 import org.scalacheck.{Arbitrary, Gen}
 import com.twitter.algebird._
@@ -11,6 +12,17 @@ class SGDLaws extends PropSpec {
   val zeroStepMonoid = new SGDMonoid(SGD.constantStep(0.0), SGD.linearGradient)
 
   implicit def SGDToSGDWeights(sgd: SGD[_]) = sgd.asInstanceOf[SGDWeights]
+  implicit def SGDToSGDWPos[Pos](sgd: SGD[Pos]) = sgd.asInstanceOf[SGDPos[Pos]]
+
+  def error(w: IndexedSeq[Double], pos: SGDPos[(Double, IndexedSeq[Double])]) = {
+    var err = 0.0
+    for (p <- pos.pos) {
+      val xsPlusConst = p._2 :+ 1.0
+      err += Math.pow(dot(w, xsPlusConst) - p._1, 2)
+    }
+    println(err/pos.pos.size)
+  }
+
 
   val (m, b) = (2.0, 4.0)
   val eps = 1e-3
@@ -80,5 +92,73 @@ class SGDLaws extends PropSpec {
         val next = oneStepMonoid.plus(w, pos)
         next.weights == minus(w.weights, SGD.linearGradient(w.weights, pos.pos.head))
     }
+  }
+
+  property("test") {
+    val gradient: (IndexedSeq[Double], (Double, IndexedSeq[Double])) => IndexedSeq[Double] = { (w, pos) =>
+      val (y, xs) = pos
+      val xsPlusConst = xs :+ 1.0
+      val err = dot(w, xsPlusConst) - y
+      // Here is the gradient
+      xsPlusConst.map { _ * err * 2 }
+    }
+
+    def newWeights(sgdW: SGDWeights, p: (Double, IndexedSeq[Double])): SGDWeights = {
+      val grad = gradient(sgdW.weights, p)
+      //println(grad)
+      val step = 0.0001
+      SGDWeights(sgdW.count + 1L,
+        sgdW.weights.view
+          .zip(grad)
+          .map { case (l: Double, r: Double) => l - step * r }
+          .toIndexedSeq)
+    }
+
+    val bufferedSource = scala.io.Source.fromFile("src/main/resources/data.csv")
+
+    var pos: SGDPos[(Double, IndexedSeq[Double])] = SGDPos(List())
+    for (line <- bufferedSource.getLines) {
+      val Array(x, y) = line.split(",").map(_.trim.toDouble)
+      pos = zeroStepMonoid.plus(pos, SGDPos((y, IndexedSeq(x)))).asInstanceOf[SGDPos[(Double, IndexedSeq[Double])]]
+    }
+
+    var w = IndexedSeq(0.0, 0.0)
+    error(w, pos)
+
+    for (p <- pos.pos) {
+      w = newWeights(SGDWeights(w), p).weights
+    }
+
+//    for (p <- pos.pos) {
+//      w = pointOneStepMonoid.plus(SGDWeights(w), SGDPos(p)).weights
+//    }
+
+//    for (i <- Range(0, 10)) {
+//      w = newWeights(SGDWeights(w), pos.pos(0)).weights
+//    }
+    println(w)
+    error(w, pos)
+  }
+
+  property("test1") {
+    val pointOneStepMonoid = new SGDMonoid(SGD.constantStep(0.0001), SGD.linearGradient)
+
+    val bufferedSource = scala.io.Source.fromFile("src/main/resources/data.csv")
+
+    var pos: SGDPos[(Double, IndexedSeq[Double])] = SGDPos(List())
+    for (line <- bufferedSource.getLines) {
+      val Array(x, y) = line.split(",").map(_.trim.toDouble)
+      pos = pointOneStepMonoid.plus(pos, SGDPos((y, IndexedSeq(x))))
+    }
+
+    var w = IndexedSeq(0.0, 0.0)
+    error(w, pos)
+
+    for (p <- pos.pos) {
+      w = pointOneStepMonoid.plus(SGDWeights(w), SGDPos(p)).weights
+    }
+
+    println(w)
+    error(w, pos)
   }
 }
