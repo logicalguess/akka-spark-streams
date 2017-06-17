@@ -14,13 +14,13 @@ class SGDLaws extends PropSpec {
   implicit def SGDToSGDWeights(sgd: SGD[_]) = sgd.asInstanceOf[SGDWeights]
   implicit def SGDToSGDWPos[Pos](sgd: SGD[Pos]) = sgd.asInstanceOf[SGDPos[Pos]]
 
-  def error(w: IndexedSeq[Double], pos: SGDPos[(Double, IndexedSeq[Double])]) = {
+  def printError(w: IndexedSeq[Double], pos: SGDPos[(Double, IndexedSeq[Double])]) = {
     var err = 0.0
     for (p <- pos.pos) {
       val xsPlusConst = p._2 :+ 1.0
       err += Math.pow(dot(w, xsPlusConst) - p._1, 2)
     }
-    println(err/pos.pos.size)
+    println(s"wieghts = $w, error = ${err/pos.pos.size}")
   }
 
 
@@ -123,7 +123,7 @@ class SGDLaws extends PropSpec {
     }
 
     var w = IndexedSeq(0.0, 0.0)
-    error(w, pos)
+    printError(w, pos)
 
     for (p <- pos.pos) {
       w = newWeights(SGDWeights(w), p).weights
@@ -136,29 +136,29 @@ class SGDLaws extends PropSpec {
 //    for (i <- Range(0, 10)) {
 //      w = newWeights(SGDWeights(w), pos.pos(0)).weights
 //    }
-    println(w)
-    error(w, pos)
+    printError(w, pos)
   }
 
-  property("test1") {
-    val pointOneStepMonoid = new SGDMonoid(SGD.constantStep(0.0001), SGD.linearGradient)
+  property("sgd with monoid") {
+    val smallStepMonoid = new SGDMonoid(SGD.constantStep(0.0001), SGD.linearGradient)
 
-    val bufferedSource = scala.io.Source.fromFile("src/main/resources/data.csv")
+    val dataSource = scala.io.Source.fromFile("src/main/resources/data.csv").getLines()
 
-    var pos: SGDPos[(Double, IndexedSeq[Double])] = SGDPos(List())
-    for (line <- bufferedSource.getLines) {
-      val Array(x, y) = line.split(",").map(_.trim.toDouble)
-      pos = pointOneStepMonoid.plus(pos, SGDPos((y, IndexedSeq(x))))
+    var dataPoints: SGDPos[(Double, IndexedSeq[Double])] = SGDPos(List())
+    for (entry <- dataSource) {
+      // read entries and add them to the data set using the monoid
+      val Array(x, y) = entry.split(",").map(_.trim.toDouble)
+      dataPoints = smallStepMonoid.plus(dataPoints, SGDPos((y, IndexedSeq(x))))
     }
 
     var w = IndexedSeq(0.0, 0.0)
-    error(w, pos)
+    printError(w, dataPoints)
 
-    for (p <- pos.pos) {
-      w = pointOneStepMonoid.plus(SGDWeights(w), SGDPos(p)).weights
+    for (p <- dataPoints.pos) {
+      // update the weights using the monoid
+      w = smallStepMonoid.plus(SGDWeights(w), SGDPos(p)).weights
     }
 
-    println(w)
-    error(w, pos)
+    printError(w, dataPoints)
   }
 }
