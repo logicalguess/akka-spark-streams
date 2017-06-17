@@ -20,7 +20,7 @@ class SGDLaws extends PropSpec {
       val xsPlusConst = p._2 :+ 1.0
       err += Math.pow(dot(w, xsPlusConst) - p._1, 2)
     }
-    println(s"wieghts = $w, error = ${err/pos.pos.size}")
+    println(s"weights = $w, error = ${err/pos.pos.size}")
   }
 
 
@@ -151,14 +151,11 @@ class SGDLaws extends PropSpec {
       dataPoints = smallStepMonoid.plus(dataPoints, SGDPos((y, IndexedSeq(x))))
     }
 
-    var w = IndexedSeq(0.0, 0.0)
-    printError(w, dataPoints)
+    printError(IndexedSeq(0.0, 0.0), dataPoints) // weights = Vector(0.0, 0.0), error = 5565.107834483211
 
-    for (p <- dataPoints.pos) {
-      // update the weights using the monoid
-      w = smallStepMonoid.plus(SGDWeights(w), SGDPos(p)).weights
-    }
+    // update the weights using the monoid
+    val w = smallStepMonoid.plus(SGDWeights(IndexedSeq(0.0, 0.0)), dataPoints).weights
+    printError(w, dataPoints) //weights = Vector(1.5785046049371114, 0.03369039016126796), error = 137.39686567659004
 
-    printError(w, dataPoints)
   }
 }
