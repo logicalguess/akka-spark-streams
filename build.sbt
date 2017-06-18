@@ -37,4 +37,8 @@ libraryDependencies ++= Seq (
 
   ,"org.scalacheck" %% "scalacheck" % "1.12.2" % "test"
 
+  // prob
+  ,"com.github.wookietreiber" %% "scala-chart"   % "0.5.1"
+  ,"nz.ac.waikato.cms.weka"    % "weka-stable"   % "3.8.0"
+
 )

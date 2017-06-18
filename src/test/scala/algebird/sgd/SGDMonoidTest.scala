@@ -1,14 +1,13 @@
-package algebird
+package algebird.sgd
 
 import com.twitter.algebird.SGD.dot
 import com.twitter.algebird._
-import org.scalacheck.Prop._
-import org.scalacheck.{Arbitrary, Gen}
 import org.scalatest.PropSpec
 
 class SGDMonoidTest extends PropSpec {
 
   implicit def SGDToSGDWeights(sgd: SGD[_]) = sgd.asInstanceOf[SGDWeights]
+  implicit def SGDPosToSGDWeights(sgd: SGDPos[_]) = sgd.asInstanceOf[SGDWeights]
   implicit def SGDToSGDWPos[Pos](sgd: SGD[Pos]) = sgd.asInstanceOf[SGDPos[Pos]]
 
   def printError(w: IndexedSeq[Double], pos: SGDPos[(Double, IndexedSeq[Double])]) = {

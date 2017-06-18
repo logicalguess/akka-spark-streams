@@ -1,9 +1,9 @@
-package algebird
+package algebird.sgd
 
 import com.twitter.algebird.SGD.dot
+import com.twitter.algebird._
 import org.scalacheck.Prop._
 import org.scalacheck.{Arbitrary, Gen}
-import com.twitter.algebird._
 import org.scalatest.PropSpec
 
 class SGDLaws extends PropSpec {
@@ -12,6 +12,7 @@ class SGDLaws extends PropSpec {
   val zeroStepMonoid = new SGDMonoid(SGD.constantStep(0.0), SGD.linearGradient)
 
   implicit def SGDToSGDWeights(sgd: SGD[_]) = sgd.asInstanceOf[SGDWeights]
+  implicit def SGDPosToSGDWeights(sgd: SGDPos[_]) = sgd.asInstanceOf[SGDWeights]
   implicit def SGDToSGDWPos[Pos](sgd: SGD[Pos]) = sgd.asInstanceOf[SGDPos[Pos]]
 
   def printError(w: IndexedSeq[Double], pos: SGDPos[(Double, IndexedSeq[Double])]) = {
