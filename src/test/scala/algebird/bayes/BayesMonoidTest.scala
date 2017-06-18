@@ -7,14 +7,15 @@ import thinkbayes.Pmf
 /**
   * Created by logicalguess on 6/18/17.
   */
-object BayesMonoidTest extends App {
+class BayesMonoidTest extends PropSpec {
 
   implicit def BayesToBayesPmf(Bayes: Bayes[_]) = Bayes.asInstanceOf[BayesPmf]
+
   implicit def BayesPosToBayesPmf(Bayes: BayesPos[_]) = Bayes.asInstanceOf[BayesPmf]
+
   implicit def BayesToBayesWPos[Pos](Bayes: Bayes[Pos]) = Bayes.asInstanceOf[BayesPos[Pos]]
 
-  //property("rolling dice with BayesMonoid") {
-
+  def dice() {
     val likelihood: (Int, Int) => Double = (h: Int, d: Int) => if (h < d) 0 else 1.0 / h
     val bayesMonoid = BayesMonoid(likelihood)
 
@@ -36,7 +37,45 @@ object BayesMonoidTest extends App {
     val plot = pmf.showBar("prior", title = "Throwing Dice with BayesMonoid", xLabel = "Hypotheses")
     bpfm.pmf.plotBarOn(plot, "posterior1")
     bpfm1.pmf.plotBarOn(plot, "posterior2")
+  }
 
-  //}
+  def monty() = {
+    val hypos = List(1, 2, 3)
+    val firstChoice = 1
 
+    def likelihood(hypo: Int, opened: Int) =
+      if (opened == hypo) 0.0 // if the door was opened, it is surely not the winning door
+      else if (hypo == firstChoice) 1.0 / (hypos.length - 1) // Monty can open any door other than the winning one
+      else 1.0 / (hypos.length - 2) // Monty can open any door other than the winning one and the chosen one
+
+    val bayesMonoid = BayesMonoid[Int](likelihood _)
+
+    println("Before any door is opened:")
+    val pmf = Pmf(hypos)
+    pmf.printChart()
+
+    println()
+    println("After Monty opens door 2:")
+    val bpfm = bayesMonoid.plus(BayesPmf(pmf), BayesPos(List(2)))
+    bpfm.pmf.printChart()
+
+    import thinkbayes.extensions.Plotting._
+    val plot = pmf.showBar("prior", title = "Monty Hall (first choice is door 1, Monty opens door 2)",
+      xLabel = "Hypotheses (Doors)")
+    bpfm.pmf.plotBarOn(plot, "posterior")
+
+  }
+
+  property("dice") {
+    dice()
+  }
+
+  property("monty") {
+    monty()
+  }
+
+}
+
+object Test extends App {
+  new BayesMonoidTest().monty()
 }
