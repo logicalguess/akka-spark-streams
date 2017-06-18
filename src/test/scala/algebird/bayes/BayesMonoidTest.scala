@@ -33,7 +33,9 @@ object BayesMonoidTest extends App {
     bpfm1.pmf.printChart()
 
     import thinkbayes.extensions.Plotting._
-    bpfm1.pmf.showBar("Dice", title = "Posterior", xLabel = "Hypotheses")
+    val plot = pmf.showBar("prior", title = "Throwing Dice with BayesMonoid", xLabel = "Hypotheses")
+    bpfm.pmf.plotBarOn(plot, "posterior1")
+    bpfm1.pmf.plotBarOn(plot, "posterior2")
 
   //}
 
