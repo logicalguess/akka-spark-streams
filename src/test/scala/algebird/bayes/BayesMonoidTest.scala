@@ -55,15 +55,14 @@ class BayesMonoidTest extends PropSpec {
     pmf.printChart()
 
     println()
-    println("After Monty opens door 2:")
-    val bpfm = bayesMonoid.plus(BayesPmf(pmf), BayesPos(List(2)))
+    println("After Monty opens door 3:")
+    val bpfm = bayesMonoid.plus(BayesPmf(pmf), BayesPos(List(3)))
     bpfm.pmf.printChart()
 
     import thinkbayes.extensions.Plotting._
-    val plot = pmf.showBar("prior", title = "Monty Hall (first choice is door 1, Monty opens door 2)",
+    val plot = pmf.showBar("prior", title = "Monty Hall (first choice is door 1, Monty opens door 3)",
       xLabel = "Hypotheses (Doors)")
     bpfm.pmf.plotBarOn(plot, "posterior")
-
   }
 
   property("dice") {
