@@ -9,7 +9,7 @@ case object BayesZero extends Bayes[Nothing]
 case class BayesPos[+Pos](val pos: List[Pos]) extends Bayes[Pos]
 case class BayesPmf[Pos](val pmf: Pmf[Pos]) extends Bayes[Nothing]
 
-case class BayesMonoid[Pos](likelihood: (Int, Pos) => Double)
+case class BayesMonoid[Pos](likelihood: (Pos, Pos) => Double)
   extends Monoid[Bayes[Pos]] {
 
   val zero = BayesZero
@@ -18,17 +18,17 @@ case class BayesMonoid[Pos](likelihood: (Int, Pos) => Double)
     (left, right) match {
       case (_, BayesZero) => left
       case (BayesPos(llps), BayesPos(rlps)) => BayesPos(llps ::: rlps)
-      case (BayesPmf(pmf), BayesPos(p)) => BayesPmf(p.foldLeft(pmf.asInstanceOf[Pmf[Int]]) { (current, pos) =>
-        newPmf(current.toPmf.asInstanceOf[Pmf[Int]], pos)
+      case (BayesPmf(pmf), BayesPos(p)) => BayesPmf(p.foldLeft(pmf.asInstanceOf[Pmf[Pos]]) { (current, pos) =>
+        newPmf(current.toPmf, pos)
       })
       // TODO make a RightFolded2 which folds A,B => (B,C), and a group on C.
       case _ => right
     }
   }
 
-  def newPmf(pmf: Pmf[Int], p: Pos): Pmf[Int] = {
+  def newPmf(pmf: Pmf[Pos], p: Pos): Pmf[Pos] = {
     //val pmf = bpmf.pmf
-    val newPmf: Pmf[Int] = pmf.map { case (h, prob) => (h, prob * likelihood(h, p)) }.normalized
+    val newPmf: Pmf[Pos] = pmf.map { case (h, prob) => (h, prob * likelihood(h, p)) }.normalized
     //BayesPmf(newPmf)
     newPmf
   }

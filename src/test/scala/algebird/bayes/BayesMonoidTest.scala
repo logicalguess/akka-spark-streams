@@ -38,10 +38,16 @@ class BayesMonoidTest extends PropSpec {
     val hypos = List(1, 2, 3)
     val firstChoice = 1
 
-    def likelihood(hypo: Int, opened: Int) =
-      if (opened == hypo) 0.0 // if the door was opened, it is surely not the winning door
-      else if (hypo == firstChoice) 1.0 / (hypos.length - 1) // Monty can open any door other than the winning one
-      else 1.0 / (hypos.length - 2) // Monty can open any door other than the winning one and the chosen one
+    // likelihood of Monty opening a door given that a hypothesis about the winning one
+    def likelihood(winning: Int, opened: Int): Double =
+      (winning, opened) match {
+        case (w, o) if w == o => 0.0 // if the door was opened, it is surely not the winning door
+        case (w, _) if w == firstChoice => 1.0 / (hypos.length - 1) // Monty can open any door other than the winning one
+        case _ => 1.0 / (hypos.length - 2) // Monty can open any door other than the winning one and the chosen one
+      }
+//      if (opened == winning) 0.0 // if the door was opened, it is surely not the winning door
+//      else if (winning == firstChoice) 1.0 / (hypos.length - 1) // Monty can open any door other than the winning one
+//      else 1.0 / (hypos.length - 2) // Monty can open any door other than the winning one and the chosen one
 
     val bayesMonoid = BayesMonoid[Int](likelihood _)
 
