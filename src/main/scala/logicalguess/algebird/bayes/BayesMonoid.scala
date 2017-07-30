@@ -6,7 +6,7 @@ import thinkbayes.Pmf
 
 sealed abstract class Bayes[+Data, +Hypothesis]
 case object BayesZero extends Bayes[Nothing, Nothing]
-case class BayesData[Data](val pos: List[Data]) extends Bayes[Data, Nothing]
+case class BayesData[Data](val ds: List[Data]) extends Bayes[Data, Nothing]
 case class BayesPmf[Hypothesis](val pmf: Pmf[Hypothesis]) extends Bayes[Nothing, Hypothesis]
 
 case class BayesMonoid[Data, Hypothesis](likelihood: (Data, Hypothesis) => Double)
@@ -17,9 +17,9 @@ case class BayesMonoid[Data, Hypothesis](likelihood: (Data, Hypothesis) => Doubl
   def plus(left: Bayes[Data, Hypothesis], right: Bayes[Data, Hypothesis]): Bayes[Data, Hypothesis] = {
     (left, right) match {
       case (_, BayesZero) => left
-      case (BayesData(llps), BayesData(rlps)) => BayesData(llps ::: rlps)
-      case (BayesPmf(pmf), BayesData(p)) => BayesPmf(p.foldLeft(pmf.asInstanceOf[Pmf[Hypothesis]]) { (current, pos) =>
-        newPmf(current.toPmf, pos)
+      case (BayesData(lds), BayesData(rds)) => BayesData(lds ::: rds)
+      case (BayesPmf(pmf), BayesData(ds)) => BayesPmf(ds.foldLeft(pmf.asInstanceOf[Pmf[Hypothesis]]) { (current, d) =>
+        newPmf(current.toPmf, d)
       })
       // TODO make a RightFolded2 which folds A,B => (B,C), and a group on C.
       case _ => right
