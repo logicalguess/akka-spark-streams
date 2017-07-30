@@ -4,21 +4,21 @@ import com.twitter.algebird.Monoid
 import thinkbayes.Pmf
 
 
-sealed abstract class Bayes[+Pos]
-case object BayesZero extends Bayes[Nothing]
-case class BayesPos[+Pos](val pos: List[Pos]) extends Bayes[Pos]
-case class BayesPmf[Pos](val pmf: Pmf[Pos]) extends Bayes[Nothing]
+sealed abstract class Bayes[+Data, +Hypothesis]
+case object BayesZero extends Bayes[Nothing, Nothing]
+case class BayesData[Data](val pos: List[Data]) extends Bayes[Data, Nothing]
+case class BayesPmf[Hypothesis](val pmf: Pmf[Hypothesis]) extends Bayes[Nothing, Hypothesis]
 
-case class BayesMonoid[Pos](likelihood: (Pos, Pos) => Double)
-  extends Monoid[Bayes[Pos]] {
+case class BayesMonoid[Data, Hypothesis](likelihood: (Data, Hypothesis) => Double)
+  extends Monoid[Bayes[Data, Hypothesis]] {
 
   val zero = BayesZero
 
-  def plus(left: Bayes[Pos], right: Bayes[Pos]): Bayes[Pos] = {
+  def plus(left: Bayes[Data, Hypothesis], right: Bayes[Data, Hypothesis]): Bayes[Data, Hypothesis] = {
     (left, right) match {
       case (_, BayesZero) => left
-      case (BayesPos(llps), BayesPos(rlps)) => BayesPos(llps ::: rlps)
-      case (BayesPmf(pmf), BayesPos(p)) => BayesPmf(p.foldLeft(pmf.asInstanceOf[Pmf[Pos]]) { (current, pos) =>
+      case (BayesData(llps), BayesData(rlps)) => BayesData(llps ::: rlps)
+      case (BayesPmf(pmf), BayesData(p)) => BayesPmf(p.foldLeft(pmf.asInstanceOf[Pmf[Hypothesis]]) { (current, pos) =>
         newPmf(current.toPmf, pos)
       })
       // TODO make a RightFolded2 which folds A,B => (B,C), and a group on C.
@@ -26,21 +26,22 @@ case class BayesMonoid[Pos](likelihood: (Pos, Pos) => Double)
     }
   }
 
-  def newPmf(pmf: Pmf[Pos], p: Pos): Pmf[Pos] = {
+  def newPmf(pmf: Pmf[Hypothesis], d: Data): Pmf[Hypothesis] = {
     //val pmf = bpmf.pmf
-    val newPmf: Pmf[Pos] = pmf.map { case (h, prob) => (h, prob * likelihood(h, p)) }.normalized
+    val newPmf: Pmf[Hypothesis] = pmf.map { case (h, prob) => (h, prob * likelihood(d, h)) }.normalized
     //BayesPmf(newPmf)
     newPmf
   }
 }
 
 object Bayes {
-  implicit def BayesToBayesPmf[Pos](b: Bayes[Pos]) = b.asInstanceOf[BayesPmf[Pos]]
+  implicit def BayesToBayesPmf[Hypothesis, Data](b: Bayes[Data, Hypothesis]) = b.asInstanceOf[BayesPmf[Hypothesis]]
 
-  implicit def BayesPosToBayesPmf[Pos](b: BayesPos[Pos]) = b.asInstanceOf[BayesPmf[Pos]]
+  implicit def BayesDataToBayesPmf[Hypothesis, Data](b: BayesData[Data]) = b.asInstanceOf[BayesPmf[Hypothesis]]
 
-  implicit def BayesToBayesPos[Pos](b: Bayes[Pos]) = b.asInstanceOf[BayesPos[Pos]]
+  implicit def BayesToBayesData[Data](b: Bayes[Data, _]) = b.asInstanceOf[BayesData[Data]]
 
-  implicit def PmfToBayesPmf(pmf: Pmf[Int]) = BayesPmf(pmf)
-  implicit def IntToBayesPos[Pos](p: Pos) = BayesPos[Pos](List(p))
+  implicit def PmfToBayesPmf[Hypothesis](pmf: Pmf[Hypothesis]) = BayesPmf(pmf)
+  implicit def DataToBayesData[Data](p: Data) = BayesData[Data](List(p))
+
 }

@@ -1,6 +1,6 @@
 package algebird.bayes
 
-import logicalguess.algebird.bayes.{Bayes, BayesMonoid, BayesPmf, BayesPos}
+import logicalguess.algebird.bayes.{Bayes, BayesMonoid, BayesPmf, BayesData}
 import org.scalatest.PropSpec
 import thinkbayes.Pmf
 
@@ -11,7 +11,7 @@ class BayesMonoidTest extends PropSpec {
   import logicalguess.algebird.bayes.Bayes._
 
   def dice() {
-    val likelihood: (Int, Int) => Double = (h: Int, d: Int) => if (h < d) 0 else 1.0 / h
+    val likelihood: (Int, Int) => Double = (d: Int, h: Int) => if (h < d) 0 else 1.0 / h
     val bayesMonoid = BayesMonoid(likelihood)
 
     println("Priors:")
@@ -20,12 +20,12 @@ class BayesMonoidTest extends PropSpec {
 
     println()
     println("After a 6 is rolled:")
-    val bpfm = bayesMonoid.plus(BayesPmf(pmf), BayesPos(List(6)))
+    val bpfm = bayesMonoid.plus(BayesPmf(pmf), BayesData(List(6)))
     bpfm.pmf.printChart()
 
     println()
     println("After 6, 8, 7, 7, 5, 4 are rolled after the first 6:")
-    val bpfm1 = bayesMonoid.plus(bpfm, BayesPos(List(6, 8, 7, 7, 5, 4)))
+    val bpfm1 = bayesMonoid.plus(bpfm, BayesData(List(6, 8, 7, 7, 5, 4)))
     bpfm1.pmf.printChart()
 
     import thinkbayes.extensions.Plotting._
@@ -39,8 +39,8 @@ class BayesMonoidTest extends PropSpec {
     val firstChoice = 1
 
     // likelihood of Monty opening a door given that a hypothesis about the winning one
-    def likelihood(winning: Int, opened: Int): Double =
-      (winning, opened) match {
+    def likelihood(opened: Int, winner: Int): Double =
+      (winner, opened) match {
         case (w, o) if w == o => 0.0 // if the door was opened, it is surely not the winning door
         case (w, _) if w == firstChoice => 1.0 / (hypos.length - 1) // Monty can open any door other than the winning one
         case _ => 1.0 / (hypos.length - 2) // Monty can open any door other than the winning one and the chosen one
@@ -49,15 +49,15 @@ class BayesMonoidTest extends PropSpec {
 //      else if (winning == firstChoice) 1.0 / (hypos.length - 1) // Monty can open any door other than the winning one
 //      else 1.0 / (hypos.length - 2) // Monty can open any door other than the winning one and the chosen one
 
-    val bayesMonoid = BayesMonoid[Int](likelihood _)
+    val bayesMonoid = BayesMonoid[Int, Int](likelihood _)
 
     println("Before any door is opened:")
-    val pmf = Pmf(hypos)
+    val pmf: Pmf[Int] = Pmf(hypos)
     pmf.printChart()
 
     println()
     println("After Monty opens door 3:")
-    val bpfm: Bayes[Int] = bayesMonoid.plus(pmf, 3)
+    val bpfm: Bayes[Int, Int] = bayesMonoid.plus(pmf, 3)
     bpfm.pmf.printChart()
 
     import thinkbayes.extensions.Plotting._
