@@ -1,7 +1,5 @@
 package logicalguess.algebird.spark
 
-import java.util.Random
-
 import akka.actor.ActorSystem
 import com.twitter.algebird._
 import org.apache.log4j.{Level, Logger}

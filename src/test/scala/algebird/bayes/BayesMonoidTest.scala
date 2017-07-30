@@ -8,12 +8,7 @@ import thinkbayes.Pmf
   * Created by logicalguess on 6/18/17.
   */
 class BayesMonoidTest extends PropSpec {
-
-  implicit def BayesToBayesPmf(Bayes: Bayes[_]) = Bayes.asInstanceOf[BayesPmf]
-
-  implicit def BayesPosToBayesPmf(Bayes: BayesPos[_]) = Bayes.asInstanceOf[BayesPmf]
-
-  implicit def BayesToBayesWPos[Pos](Bayes: Bayes[Pos]) = Bayes.asInstanceOf[BayesPos[Pos]]
+  import logicalguess.algebird.bayes.Bayes._
 
   def dice() {
     val likelihood: (Int, Int) => Double = (h: Int, d: Int) => if (h < d) 0 else 1.0 / h
@@ -56,7 +51,7 @@ class BayesMonoidTest extends PropSpec {
 
     println()
     println("After Monty opens door 3:")
-    val bpfm = bayesMonoid.plus(BayesPmf(pmf), BayesPos(List(3)))
+    val bpfm: Bayes[Int] = bayesMonoid.plus(pmf, 3)
     bpfm.pmf.printChart()
 
     import thinkbayes.extensions.Plotting._
